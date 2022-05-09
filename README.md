@@ -1,5 +1,5 @@
 # Currency Converter
-My first attempt at an iOS app written in Swift. This app is simply written for learning purposes, it is NOT my best work 😅
+My first attempt at an iOS app written in Swift. This app is simply written for learning purposes and because I was tired of ads on every single currency converter app I could find! (It is definitely not my finest work 😅)
 
 I wanted to write an app that I could actually use (which I do) and at the same time learn about Swift, SwiftUI and the Apple Developer ecosystem (you have to pay Apple to keep the app working for more than a week!? 🤯).
 And to my surprise Swift is actually very nice to use, even though my code is horrible to look at 😅
