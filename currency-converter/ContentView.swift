@@ -59,15 +59,22 @@ struct ContentView: View {
         let mainColor = self.colorScheme == .dark ? Color.gray : Color.black
         
         if (currencyRates.dataIsLoaded) {
+            Button(action: { currencyRates.dataIsLoaded = false; currencyRates.loadRates() }, label: {
+                Image(systemName: "gobackward")
+                    .renderingMode(.template)
+                    .foregroundColor(.gray)
+                    .font(Font.system(size: 20, weight: .medium))
+            }).frame(maxWidth: .infinity, alignment: .topTrailing).padding(15).onAppear {
+                // Show keyboard immediately
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    fromFocus = true
+                }
+            }
+            
             let rates = currencyRates.currencyModel?.rates
             VStack(alignment: .center) {
                 Spacer().frame(height: 200)
-                Text("Currency Converter").font(.title).bold().onAppear {
-                    // Show keyboard immediately
-                    DispatchQueue.main.async {
-                        fromFocus = true
-                    }
-                }
+                Text("Currency Converter").font(.title).bold()
                 Spacer().frame(height: 50)
                 HStack {
                     VStack {
@@ -103,7 +110,7 @@ struct ContentView: View {
                     }
                     Spacer().frame(width: 40)
                     Button(action: reverseButton, label: {
-                        Image(systemName: "repeat")
+                        Image(systemName: "repeat").font(Font.system(size: 18, weight: .medium))
                     })
                     Spacer().frame(width: 40)
                     VStack {
@@ -279,12 +286,24 @@ struct ContentView: View {
 class CurrencyRates: ObservableObject {
     @Published var dataIsLoaded: Bool = false
     @Published var currencyModel: CurrencyModel? = nil
+    let userDefaults = UserDefaults.standard
+    let dateFormatter = DateFormatter()
     
     init() {
+        dateFormatter.dateFormat = "yyyy-MM-dd"
         loadRates()
     }
     
     func loadRates() {
+        let rates = userDefaults.object(forKey: "CurrencyRates") as? Data
+        if (rates == nil) {
+            loadRatesFromURL()
+        } else {
+            loadRatesFromStorage(rates: rates)
+        }
+    }
+    
+    func loadRatesFromURL() {
         let url = URL(string: "https://api.frankfurter.app/latest")!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -301,6 +320,7 @@ class CurrencyRates: ObservableObject {
             
             DispatchQueue.main.async {
                 do {
+                    self.userDefaults.set(content, forKey: "CurrencyRates")
                     self.currencyModel = try JSONDecoder().decode(CurrencyModel.self, from: content)
                     self.dataIsLoaded = true
                 } catch {
@@ -309,6 +329,29 @@ class CurrencyRates: ObservableObject {
             }
         }
         task.resume()
+    }
+    
+    func loadRatesFromStorage(rates: Data?) {
+        do {
+            self.currencyModel = try JSONDecoder().decode(CurrencyModel.self, from: rates!)
+            
+            let dateFromData = dateFormatter.date(from: self.currencyModel!.date)!
+            
+            // Weird bug - we have to add one day to the date from the data
+            let date = Calendar.current.date(byAdding: .day, value: 1, to: dateFromData)!
+            let now = dateFormatter.date(from: dateFormatter.string(from: Date()))!
+            
+            
+            if (date < now) {
+                loadRatesFromURL()
+                return
+            }
+            
+            self.dataIsLoaded = true
+            
+        } catch {
+            print("Something went wrong: \(error)")
+        }
     }
 }
 
