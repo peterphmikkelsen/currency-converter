@@ -7,4 +7,4 @@ And to my surprise Swift is actually very nice to use, even though my code is ho
 ## How it looks
 Simple but effective
 
-https://user-images.githubusercontent.com/31919921/167398165-a8031724-d7a2-4b4a-8ebe-f3be90de503d.mov
+https://user-images.githubusercontent.com/31919921/167884230-370c08ae-a9e3-44ee-b927-e7b20f231a40.mov
