@@ -18,6 +18,7 @@ struct ContentView: View {
     
     private var textfieldWidth: CGFloat = 120
     @State private var isLoadingAnimation = false
+    @State private var isRefreshingAnimation = false
     @Environment(\.colorScheme) var colorScheme
     
     let currencies = [
@@ -59,11 +60,22 @@ struct ContentView: View {
         let mainColor = self.colorScheme == .dark ? Color.gray : Color.black
         
         if (currencyRates.dataIsLoaded) {
-            Button(action: { currencyRates.dataIsLoaded = false; currencyRates.loadRates() }, label: {
+            Button(action: {
+                currencyRates.dataIsLoaded = false
+                currencyRates.loadRates()
+                withAnimation(Animation.linear(duration: 0.4)) {
+                    isRefreshingAnimation = true
+                    // Bit of a hack, but Swift does not have a completion callback on withAnimation (yet)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        isRefreshingAnimation = false
+                    }
+                }
+            }, label: {
                 Image(systemName: "gobackward")
                     .renderingMode(.template)
                     .foregroundColor(.gray)
                     .font(Font.system(size: 20, weight: .medium))
+                    .rotationEffect(Angle(degrees: isRefreshingAnimation ? 0 : 360))
             }).frame(maxWidth: .infinity, alignment: .topTrailing).padding(15).onAppear {
                 // Show keyboard immediately
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -366,5 +378,3 @@ struct ContentView_Previews: PreviewProvider {
         ContentView().preferredColorScheme(.dark)
     }
 }
-
-
